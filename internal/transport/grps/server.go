@@ -5,7 +5,7 @@ import (
 	"net"
 
 	handler "github.com/Suinar/Bank-exhange-rate-service/internal/transport/grps/handler"
-	ranking "github.com/Suinar/Bank-exhange-rate-service/proto"
+	ranking "github.com/Suinar/Bank-exhange-rate-service/ranking"
 	"google.golang.org/grpc"
 )
 
