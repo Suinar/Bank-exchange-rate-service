@@ -4,7 +4,7 @@
 // - protoc             v4.25.9
 // source: proto/currency_ranking.proto
 
-package proto
+package ranking
 
 import (
 	context "context"

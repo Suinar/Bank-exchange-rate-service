@@ -3,22 +3,22 @@
 import (
 	"context"
 
-	proto "github.com/Suinar/Bank-exhange-rate-service/proto"
+	ranking "github.com/Suinar/Bank-exhange-rate-service/ranking"
 )
 
 type RankingHandler struct {
-	proto.UnimplementedRankingServiceServer
+	ranking.UnimplementedRankingServiceServer
 }
 
-func (h *RankingHandler) GetAllRanking(ctx context.Context, req *proto.GetAllRankingRequest) (
-	*proto.GetAllRankingResponse, error) {
+func (h *RankingHandler) GetAllRanking(ctx context.Context, req *ranking.GetAllRankingRequest) (
+	*ranking.GetAllRankingResponse, error) {
 	// todo: implement method.
 
 	panic("implement me")
 }
 
-func (h *RankingHandler) GetRelativeRanking(ctx context.Context, req *proto.GetRelativeRankingRequest) (
-	*proto.GetRelativeRankingResponse, error) {
+func (h *RankingHandler) GetRelativeRanking(ctx context.Context, req *ranking.GetRelativeRankingRequest) (
+	*ranking.GetRelativeRankingResponse, error) {
 	// todo: implement method.
 
 	panic("implement me")

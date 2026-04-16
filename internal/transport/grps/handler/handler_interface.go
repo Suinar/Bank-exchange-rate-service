@@ -3,10 +3,10 @@
 import (
 	"context"
 
-	proto "github.com/Suinar/Bank-exhange-rate-service/proto"
+	ranking "github.com/Suinar/Bank-exhange-rate-service/ranking"
 )
 
 type IRankingHandler interface {
-	GetAllRanking(ctx context.Context, req proto.GetAllRankingRequest) (*proto.GetAllRankingResponse, error)
-	GetRelativeRanking(ctx context.Context, req *proto.GetRelativeRankingRequest) (*proto.GetRelativeRankingResponse, error)
+	GetAllRanking(ctx context.Context, req ranking.GetAllRankingRequest) (*ranking.GetAllRankingResponse, error)
+	GetRelativeRanking(ctx context.Context, req *ranking.GetRelativeRankingRequest) (*ranking.GetRelativeRankingResponse, error)
 }
