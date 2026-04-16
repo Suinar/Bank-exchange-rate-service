@@ -1,0 +1,42 @@
+﻿syntax = "proto3";
+
+package ranking;
+
+// IMPORTANT: replace module path if needed
+option go_package = "github.com/Suinar/Bank-exhange-rate-service/gen/ranking;ranking";
+
+service RankingService {
+  rpc GetAllRanking (GetAllRankingRequest) returns (GetAllRankingResponse);
+  rpc GetRelativeRanking (GetRelativeRankingRequest) returns (GetRelativeRankingResponse);
+}
+
+// ===== DATA MODEL =====
+
+message ExchangeRate {
+  int64 currency_id_from = 1;
+  int64 currency_id_to = 2;
+  float rate_sell = 3;
+  float rate_buy = 4;
+  float rate_cross = 5;
+}
+
+// ===== REQUESTS =====
+
+message GetAllRankingRequest {
+  int64 currency_id_from = 1;
+}
+
+message GetRelativeRankingRequest {
+  int64 currency_id_from = 1;
+  int64 currency_id_to = 2;
+}
+
+// ===== RESPONSES =====
+
+message GetAllRankingResponse {
+  repeated ExchangeRate rates = 1;
+}
+
+message GetRelativeRankingResponse {
+  ExchangeRate rate = 1;
+}
