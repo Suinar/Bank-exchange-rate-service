@@ -3,7 +3,7 @@
 import (
 	"context"
 
-	ranking "github.com/Suinar/Bank-exhange-rate-service/proto"
+	ranking "github.com/Suinar/Bank-exhange-rate-service/gen/github.com/Suinar/Bank-exhange-rate-service/gen/ranking"
 )
 
 type RankingHandler struct {
