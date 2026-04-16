@@ -4,10 +4,11 @@
 // - protoc             v4.25.9
 // source: proto/currency_ranking.proto
 
-package ranking
+package proto
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

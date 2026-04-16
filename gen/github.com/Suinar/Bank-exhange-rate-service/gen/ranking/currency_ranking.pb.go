@@ -4,14 +4,15 @@
 // 	protoc        v4.25.9
 // source: proto/currency_ranking.proto
 
-package ranking
+package proto
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -304,7 +305,7 @@ const file_proto_currency_ranking_proto_rawDesc = "" +
 	"\x04rate\x18\x01 \x01(\v2\x15.ranking.ExchangeRateR\x04rate2\xbf\x01\n" +
 	"\x0eRankingService\x12N\n" +
 	"\rGetAllRanking\x12\x1d.ranking.GetAllRankingRequest\x1a\x1e.ranking.GetAllRankingResponse\x12]\n" +
-	"\x12GetRelativeRanking\x12\".ranking.GetRelativeRankingRequest\x1a#.ranking.GetRelativeRankingResponseBAZ?github.com/Suinar/Bank-exhange-rate-service/gen/ranking;rankingb\x06proto3"
+	"\x12GetRelativeRanking\x12\".ranking.GetRelativeRankingRequest\x1a#.ranking.GetRelativeRankingResponseB=Z;github.com/Suinar/Bank-exhange-rate-service/ranking;rankingb\x06proto3"
 
 var (
 	file_proto_currency_ranking_proto_rawDescOnce sync.Once
