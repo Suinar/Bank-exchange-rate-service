@@ -3,7 +3,7 @@
 package ranking;
 
 // IMPORTANT: replace module path if needed
-option go_package = "github.com/Suinar/Bank-exhange-rate-service/gen/ranking;ranking";
+option go_package = "github.com/Suinar/Bank-exhange-rate-service/ranking;ranking";
 
 service RankingService {
   rpc GetAllRanking (GetAllRankingRequest) returns (GetAllRankingResponse);
