@@ -1,15 +1,15 @@
-﻿package grps
+﻿package grpc
 
 import (
 	"log"
 	"net"
 
-	handler "github.com/Suinar/Bank-exhange-rate-service/internal/transport/grps/handler"
+	handler "github.com/Suinar/Bank-exhange-rate-service/BankExhangeRateService/internal/transport/grpc/handler"
 	ranking "github.com/Suinar/Bank-exhange-rate-service/ranking"
 	"google.golang.org/grpc"
 )
 
-func RanGrpsServer() {
+func RanGrpcServer() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
