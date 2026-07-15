@@ -3,17 +3,20 @@ module github.com/Suinar/Bank-exhange-rate-service
 go 1.25.5
 
 require (
-	github.com/Suinar/Bank-proto v0.0.0-20260708212547-42956bb707c9
+	github.com/Suinar/Bank-proto v0.0.0-20260714204042-d5dc926e2f4c
 	github.com/Suinar/Bank-repository-service v0.0.0-20260709134621-b18daaf6ae4e
+	github.com/go-resty/resty/v2 v2.17.2
 	github.com/spf13/viper v1.21.0
 	go.uber.org/mock v0.6.0
 	google.golang.org/grpc v1.82.0
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -25,5 +28,5 @@ require (
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
