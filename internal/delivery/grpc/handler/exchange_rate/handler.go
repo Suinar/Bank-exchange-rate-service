@@ -4,10 +4,8 @@ import (
 	"context"
 
 	service "github.com/Suinar/Bank-exhange-rate-service/internal/services/exchange_rate"
-
-	errors "github.com/Suinar/Bank-repository-service/pkg"
-
 	ecxhangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
+	errors "github.com/Suinar/Bank-repository-service/pkg"
 )
 
 type ExchangeReteHandler struct {
@@ -24,7 +22,7 @@ func NewExchangeRateHandlerHandler(service service.ExchangeRateService,
 }
 
 func (h *ExchangeReteHandler) GetExchangeRate(ctx context.Context, req *ecxhangeRateProto.GetRelativeRankingRequest,
-) (*ecxhangeRateProto.RankingList, error) {
+) (*ecxhangeRateProto.Ranking, error) {
 
 	if req.CurrencyIdFrom == req.CurrencyIdTo {
 		return nil, errors.BadRequest
