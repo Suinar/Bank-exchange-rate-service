@@ -1,5 +1,6 @@
-﻿package monobank
+package monobank
 
+// MonoExchangeRate represents an exchange-rate item returned by the Monobank API.
 type MonoExchangeRate struct {
 	CurrencyCodeA int32 `json:"currencyCodeA"`
 	CurrencyCodeB int32 `json:"currencyCodeB"`

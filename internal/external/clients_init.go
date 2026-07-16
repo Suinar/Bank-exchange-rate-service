@@ -1,12 +1,14 @@
-﻿package external
+package external
 
 import monobank "github.com/Suinar/Bank-exhange-rate-service/internal/external/monobank"
 
+// Clients groups integrations with external systems.
 type Clients struct {
-	MonoClient monobank.MonobankClient
+	MonoClient *monobank.MonobankClient
 }
 
-func InitClients(monoClient monobank.MonobankClient) *Clients {
+// InitClients assembles the external clients used by the application.
+func InitClients(monoClient *monobank.MonobankClient) *Clients {
 	return &Clients{
 		MonoClient: monoClient,
 	}

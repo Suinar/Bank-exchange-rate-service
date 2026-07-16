@@ -1,42 +1,72 @@
 package grpc
 
 import (
-	"log"
-	"net"
+	context "context"
+	errors "errors"
+	fmt "fmt"
+	net "net"
+	time "time"
 
-	"github.com/Suinar/Bank-exhange-rate-service/internal/configs"
-	service "github.com/Suinar/Bank-exhange-rate-service/internal/services"
-
-	ecxhangeRateHandler "github.com/Suinar/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
-
-	ecxhangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
-
-	"google.golang.org/grpc"
+	configs "github.com/Suinar/Bank-exhange-rate-service/internal/configs"
+	exchangeRateHandler "github.com/Suinar/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
+	services "github.com/Suinar/Bank-exhange-rate-service/internal/services"
+	exchangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
+	grpc "google.golang.org/grpc"
+	health "google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func RunGrpcServer(cfg *configs.Config, services *service.Services) {
-	lis, err := net.Listen(cfg.GRPC.GRPCPort, cfg.GRPC.Network)
+// RunGrpcServer serves gRPC requests until the context is cancelled or serving fails.
+func RunGrpcServer(ctx context.Context, cfg *configs.Config, appServices *services.Services) error {
+	address := net.JoinHostPort("", cfg.GRPC.Port)
+	listener, err := net.Listen(cfg.GRPC.Network, address)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("listen on %s: %w", address, err)
 	}
 
-	grpcServer := grpc.NewServer()
+	server := grpc.NewServer()
+	RegisterServices(server, appServices)
 
-	RegisterServices(grpcServer, services)
+	healthServer := health.NewServer()
+	healthpb.RegisterHealthServer(server, healthServer)
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 
-	log.Println("repository-service running on :" + cfg.GRPC.GRPCPort)
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- server.Serve(listener)
+	}()
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	select {
+	case <-ctx.Done():
+		healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+
+		stopped := make(chan struct{})
+		go func() {
+			server.GracefulStop()
+			close(stopped)
+		}()
+
+		// Do not let a stuck client stream block pod termination indefinitely.
+		select {
+		case <-stopped:
+		case <-time.After(25 * time.Second):
+			server.Stop()
+		}
+
+		return nil
+	case err = <-serveErr:
+		if errors.Is(err, grpc.ErrServerStopped) {
+			return nil
+		}
+
+		return fmt.Errorf("serve gRPC: %w", err)
 	}
 }
 
-func RegisterServices(
-	grpcServer *grpc.Server,
-	services *service.Services) {
-	ecxhangeRateProto.RegisterRankingRepositoryServer(
-		grpcServer,
-		ecxhangeRateHandler.NewExchangeRateHandlerHandler(services.ExchangeRateService),
+// RegisterServices binds application handlers to the gRPC server.
+func RegisterServices(server *grpc.Server, appServices *services.Services) {
+	exchangeRateProto.RegisterRankingRepositoryServer(
+		server,
+		exchangeRateHandler.NewExchangeRateHandler(appServices.ExchangeRateService),
 	)
-
 }

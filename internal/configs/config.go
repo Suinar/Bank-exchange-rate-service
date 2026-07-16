@@ -1,45 +1,54 @@
 package configs
 
 import (
-	"log"
+	errors "errors"
+	log "log"
+	os "os"
 
-	"github.com/spf13/viper"
+	viper "github.com/spf13/viper"
 )
 
+// Config contains the runtime settings required by application components.
 type Config struct {
 	GRPC struct {
-		GRPCPort string
-		Network  string
+		Port    string
+		Network string
 	}
 
-	monoBank struct {
-		baseUrl          string
+	Monobank struct {
+		BaseURL          string
 		CurrencyEndpoint string
 	}
 
-	kafka struct {
+	Kafka struct {
 		Brokers []string
 	}
 }
 
+// Load reads application settings from the environment and the local .env file.
 func Load() *Config {
+	viper.SetDefault("GRPC_PORT", "50053")
+	viper.SetDefault("GRPC_NETWORK", "tcp")
+	viper.SetDefault("MONOBANK_BASE_URL", "https://api.monobank.ua")
+	viper.SetDefault("MONOBANK_CURRENCY_ENDPOINT", "/bank/currency")
+
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := viper.ReadInConfig(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err)
 	}
 
 	cfg := &Config{}
 
-	cfg.GRPC.GRPCPort = viper.GetString("GRPS_PORT")
+	cfg.GRPC.Port = viper.GetString("GRPC_PORT")
 	cfg.GRPC.Network = viper.GetString("GRPC_NETWORK")
 
-	cfg.monoBank.baseUrl = viper.GetString("MONOBANK_BASE_URL")
-	cfg.monoBank.CurrencyEndpoint = viper.GetString("MONOBANK_CURRENCY_ENDPOINT")
+	cfg.Monobank.BaseURL = viper.GetString("MONOBANK_BASE_URL")
+	cfg.Monobank.CurrencyEndpoint = viper.GetString("MONOBANK_CURRENCY_ENDPOINT")
 
-	cfg.kafka.Brokers = viper.GetStringSlice("KAFKA_BROKERS")
+	cfg.Kafka.Brokers = viper.GetStringSlice("KAFKA_BROKERS")
 
 	return cfg
 }

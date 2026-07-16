@@ -1,38 +1,48 @@
 package exchange_rate
 
 import (
-	"context"
+	context "context"
 
 	service "github.com/Suinar/Bank-exhange-rate-service/internal/services/exchange_rate"
-	ecxhangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
+
 	errors "github.com/Suinar/Bank-repository-service/pkg"
+
+	ecxhangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
 )
 
-type ExchangeReteHandler struct {
-	service service.ExchangeRateService
+// ExchangeRateHandler exposes exchange-rate operations through gRPC.
+type ExchangeRateHandler struct {
+	service service.IExchangeRateService
 
 	ecxhangeRateProto.UnimplementedRankingRepositoryServer
 }
 
-func NewExchangeRateHandlerHandler(service service.ExchangeRateService,
-) *ExchangeReteHandler {
-	return &ExchangeReteHandler{
+// NewExchangeRateHandler creates a gRPC handler backed by the exchange-rate service.
+func NewExchangeRateHandler(service service.IExchangeRateService) *ExchangeRateHandler {
+	return &ExchangeRateHandler{
 		service: service,
 	}
 }
 
-func (h *ExchangeReteHandler) GetExchangeRate(ctx context.Context, req *ecxhangeRateProto.GetRelativeRankingRequest,
+// GetExchangeRate validates a currency pair and returns its current exchange rate.
+func (h *ExchangeRateHandler) GetExchangeRate(ctx context.Context, req *ecxhangeRateProto.GetRelativeRankingRequest,
 ) (*ecxhangeRateProto.Ranking, error) {
 
-	if req.CurrencyIdFrom == req.CurrencyIdTo {
+	// A relative rate requires two distinct currencies; reject the request at
+	// the transport boundary before invoking application logic.
+	if req == nil || req.CurrencyIsoFrom == req.CurrencyIsoTo {
 		return nil, errors.BadRequest
 	}
 
-	return h.service.GetExchangeRate(ctx, req.CurrencyIdFrom, req.CurrencyIdTo)
+	return h.service.GetExchangeRate(ctx, req.CurrencyIsoFrom, req.CurrencyIsoTo)
 }
 
-func (h *ExchangeReteHandler) GetAllExchangeRate(ctx context.Context, req *ecxhangeRateProto.GetAllRankingRequest,
+// GetAllExchangeRate returns all rates available for the requested source currency.
+func (h *ExchangeRateHandler) GetAllExchangeRate(ctx context.Context, req *ecxhangeRateProto.GetAllRankingRequest,
 ) (*ecxhangeRateProto.RankingList, error) {
+	if req == nil {
+		return nil, errors.BadRequest
+	}
 
-	return h.service.GetAllExchangeRate(ctx, req.CurrencyIdFrom)
+	return h.service.GetAllExchangeRate(ctx, req.CurrencyIsoFrom)
 }
