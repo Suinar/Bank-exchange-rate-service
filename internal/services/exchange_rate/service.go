@@ -32,6 +32,9 @@ func (s *ExchangeRateService) GetExchangeRate(ctx context.Context, currencyIsoFr
 	}
 
 	return nil, errors.InternalServerError
+	// The upstream request succeeded, but it did not contain the requested
+	// currency pair. Keep this distinct from transport-level client errors.
+	return nil, errors.NotFound
 }
 
 func (s *ExchangeRateService) GetAllExchangeRate(ctx context.Context, currencyIsoFrom int32,
