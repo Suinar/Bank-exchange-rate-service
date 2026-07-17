@@ -35,6 +35,32 @@ func TestMonobankClient_GetAllExchangeRate_Success(t *testing.T) {
 	assert.Equal(t, fixture.NewRanking(), &result[0])
 }
 
+func TestMonobankClient_GetAllExchangeRate_UnexpectedStatusCode(t *testing.T) {
+	t.Parallel()
+
+	mux, _, sut, ctx := NewSUT(t)
+	mux.HandleFunc("/bank/currency", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	result, err := sut.GetAllExchangeRate(ctx)
+
+	require.EqualError(t, err, "monobank unexpected status code: 500")
+	assert.Nil(t, result)
+}
+
+func TestMonobankClient_GetAllExchangeRate_RequestError(t *testing.T) {
+	t.Parallel()
+
+	_, server, sut, ctx := NewSUT(t)
+	server.Close()
+
+	result, err := sut.GetAllExchangeRate(ctx)
+
+	require.Error(t, err)
+	assert.Nil(t, result)
+}
+
 func TestMonobankClient_MonobankMapper(t *testing.T) {
 	t.Parallel()
 
@@ -45,6 +71,16 @@ func TestMonobankClient_MonobankMapper(t *testing.T) {
 
 	require.NotNil(t, result)
 	assert.Equal(t, fixture.NewRanking(), result)
+}
+
+func TestMonobankClient_MonobankMapper_NilModel(t *testing.T) {
+	t.Parallel()
+
+	_, _, sut, _ := NewSUT(t)
+
+	result := sut.MonobankMapper(nil)
+
+	assert.Nil(t, result)
 }
 
 func NewSUT(t *testing.T) (*http.ServeMux, *httptest.Server, *monobank.MonobankClient, context.Context) {

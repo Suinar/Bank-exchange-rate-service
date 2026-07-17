@@ -1,19 +1,18 @@
+name: bank-exchange-rate
+
 services:
   exchange-rate-service:
+    image: ${EXCHANGE_RATE_IMAGE:-bank-exchange-rate-service:local}
     build:
       context: .
       dockerfile: Dockerfile
-
-    container_name: exchange-rate-service
-
-    restart: always
-
-    ports:
-      - "50053:50053"
-
+    init: true
+    restart: unless-stopped
     environment:
-      GRPC_PORT: 50053
-
+      GRPC_PORT: "50053"
+      GRPC_NETWORK: tcp
+      MONOBANK_BASE_URL: ${MONOBANK_BASE_URL:-https://api.monobank.ua}
+      MONOBANK_CURRENCY_ENDPOINT: ${MONOBANK_CURRENCY_ENDPOINT:-/bank/currency}
       KAFKA_BROKERS: kafka:9092
 
       GRPC_PORT: "50053"
@@ -89,72 +88,65 @@ services:
     restart: always
 
     ports:
-      - "9092:9092"
-
-    environment:
-      KAFKA_CFG_NODE_ID: 1
-
-      KAFKA_CFG_PROCESS_ROLES: broker,controller
-
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-
-      KAFKA_CFG_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093
-
-      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092
-
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
-
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-
+      - "${GRPC_PORT:-50053}:50053"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "kafka-topics.sh --bootstrap-server localhost:9092 --list"
-        ]
-
+      test: ["CMD", "/app/bank-exchange-rate-service", "healthcheck"]
       interval: 10s
       timeout: 5s
-      retries: 10
-
-    volumes:
-      - kafka-data:/bitnami/kafka
-
+      start_period: 10s
+      retries: 3
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
     networks:
       - bank-network
 
+  kafka:
+    image: ${KAFKA_IMAGE:-bitnami/kafka:latest}
+    restart: unless-stopped
+    environment:
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_LISTENERS: INTERNAL://:9092,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://${KAFKA_ADVERTISED_HOST:-localhost}:${KAFKA_PORT:-29092}
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+    ports:
+      - "${KAFKA_PORT:-29092}:29092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 10
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - bank-network
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-
-    container_name: kafka-ui
-
-    restart: always
-
-    ports:
-      - "8081:8080"
-
+    image: ${KAFKA_UI_IMAGE:-provectuslabs/kafka-ui:latest}
+    restart: unless-stopped
+    profiles: ["tools"]
     environment:
       KAFKA_CLUSTERS_0_NAME: bank-kafka
-
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-
+    ports:
+      - "${KAFKA_UI_PORT:-8081}:8080"
     depends_on:
       kafka:
         condition: service_healthy
-
     networks:
       - bank-network
 
-
-
 volumes:
   kafka-data:
-
 
 networks:
   bank-network:

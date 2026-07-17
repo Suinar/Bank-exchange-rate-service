@@ -1,7 +1,8 @@
 package core
 
-import "time"
+import time "time"
 
+// Ranking is the domain representation of an exchange rate between two currencies.
 type Ranking struct {
 	CurrencyIsoFrom int32 `json:"currency_iso_from"`
 	CurrencyIsoTo   int32 `json:"currency_iso_to"`

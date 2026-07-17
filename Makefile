@@ -8,6 +8,7 @@ APP_SERVICE := exchange-rate-service
 	docker-build docker-up docker-up-build docker-down docker-stop docker-start \
 	docker-restart docker-logs docker-app-logs docker-kafka-logs docker-ui-logs \
 	docker-ps docker-health docker-kafka-up docker-kafka-down docker-tools-up docker-tools-down docker-config docker-pull \
+	docker-ps docker-health docker-tools-up docker-tools-down docker-config docker-pull \
 	docker-create docker-remove docker-reset
 
 help:

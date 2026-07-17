@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	exchange_rate "github.com/Suinar/Bank-proto/exchange_rate"
+	exchange_ranking "github.com/Suinar/Bank-proto/exchange_rate"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,31 +42,31 @@ func (m *MockIExchangeRateService) EXPECT() *MockIExchangeRateServiceMockRecorde
 }
 
 // GetAllExchangeRate mocks base method.
-func (m *MockIExchangeRateService) GetAllExchangeRate(ctx context.Context, currencyIdFrom int64) (*exchange_rate.RankingList, error) {
+func (m *MockIExchangeRateService) GetAllExchangeRate(ctx context.Context, currencyIsoFrom int32) (*exchange_ranking.RankingList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllExchangeRate", ctx, currencyIdFrom)
-	ret0, _ := ret[0].(*exchange_rate.RankingList)
+	ret := m.ctrl.Call(m, "GetAllExchangeRate", ctx, currencyIsoFrom)
+	ret0, _ := ret[0].(*exchange_ranking.RankingList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllExchangeRate indicates an expected call of GetAllExchangeRate.
-func (mr *MockIExchangeRateServiceMockRecorder) GetAllExchangeRate(ctx, currencyIdFrom any) *gomock.Call {
+func (mr *MockIExchangeRateServiceMockRecorder) GetAllExchangeRate(ctx, currencyIsoFrom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllExchangeRate", reflect.TypeOf((*MockIExchangeRateService)(nil).GetAllExchangeRate), ctx, currencyIdFrom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllExchangeRate", reflect.TypeOf((*MockIExchangeRateService)(nil).GetAllExchangeRate), ctx, currencyIsoFrom)
 }
 
 // GetExchangeRate mocks base method.
-func (m *MockIExchangeRateService) GetExchangeRate(ctx context.Context, currencyIdFrom, currencyIdTo int64) (*exchange_rate.RankingList, error) {
+func (m *MockIExchangeRateService) GetExchangeRate(ctx context.Context, currencyIsoFrom, currencyIsoTo int32) (*exchange_ranking.Ranking, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExchangeRate", ctx, currencyIdFrom, currencyIdTo)
-	ret0, _ := ret[0].(*exchange_rate.RankingList)
+	ret := m.ctrl.Call(m, "GetExchangeRate", ctx, currencyIsoFrom, currencyIsoTo)
+	ret0, _ := ret[0].(*exchange_ranking.Ranking)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetExchangeRate indicates an expected call of GetExchangeRate.
-func (mr *MockIExchangeRateServiceMockRecorder) GetExchangeRate(ctx, currencyIdFrom, currencyIdTo any) *gomock.Call {
+func (mr *MockIExchangeRateServiceMockRecorder) GetExchangeRate(ctx, currencyIsoFrom, currencyIsoTo any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExchangeRate", reflect.TypeOf((*MockIExchangeRateService)(nil).GetExchangeRate), ctx, currencyIdFrom, currencyIdTo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExchangeRate", reflect.TypeOf((*MockIExchangeRateService)(nil).GetExchangeRate), ctx, currencyIsoFrom, currencyIsoTo)
 }

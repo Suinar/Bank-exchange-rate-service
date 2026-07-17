@@ -1,7 +1,7 @@
 package exchange_rate
 
 import (
-	"context"
+	context "context"
 
 	monobank "github.com/Suinar/Bank-exhange-rate-service/internal/external/monobank"
 	ranking "github.com/Suinar/Bank-exhange-rate-service/pkg/core"
@@ -14,8 +14,8 @@ type ExchangeRateService struct {
 	monoClient monobank.IMonobankClient
 }
 
-func NewExchangeRateService() *ExchangeRateService {
-	return &ExchangeRateService{}
+func NewExchangeRateService(monoClient monobank.IMonobankClient) *ExchangeRateService {
+	return &ExchangeRateService{monoClient: monoClient}
 }
 
 func (s *ExchangeRateService) GetExchangeRate(ctx context.Context, currencyIsoFrom int32, currencyIsoTo int32,
@@ -25,12 +25,14 @@ func (s *ExchangeRateService) GetExchangeRate(ctx context.Context, currencyIsoFr
 		return nil, err
 	}
 
-	for _, rate := range rates {
-		if rate.CurrencyIsoFrom == currencyIsoFrom && rate.CurrencyIsoTo == currencyIsoTo {
-			return s.MapperToProto(&rate), nil
+	for i := range rates {
+		if rates[i].CurrencyIsoFrom == currencyIsoFrom && rates[i].CurrencyIsoTo == currencyIsoTo {
+			return s.MapperToProto(&rates[i]), nil
 		}
 	}
 
+	// The upstream request succeeded, but it did not contain the requested
+	// currency pair. Keep this distinct from transport-level client errors.
 	return nil, errors.InternalServerError
 	// The upstream request succeeded, but it did not contain the requested
 	// currency pair. Keep this distinct from transport-level client errors.
@@ -44,10 +46,12 @@ func (s *ExchangeRateService) GetAllExchangeRate(ctx context.Context, currencyIs
 		return nil, err
 	}
 
+	// Preallocate for the worst case while preserving an empty, non-nil list
+	// when the source currency has no matching rates.
 	protoRates := make([]*ecxhangeRateProto.Ranking, 0, len(rates))
-	for _, rate := range rates {
-		if rate.CurrencyIsoFrom == currencyIsoFrom {
-			protoRates = append(protoRates, s.MapperToProto(&rate))
+	for i := range rates {
+		if rates[i].CurrencyIsoFrom == currencyIsoFrom {
+			protoRates = append(protoRates, s.MapperToProto(&rates[i]))
 		}
 	}
 
@@ -57,6 +61,10 @@ func (s *ExchangeRateService) GetAllExchangeRate(ctx context.Context, currencyIs
 }
 
 func (s *ExchangeRateService) MapperToProto(rate *ranking.Ranking) *ecxhangeRateProto.Ranking {
+	if rate == nil {
+		return nil
+	}
+
 	return &ecxhangeRateProto.Ranking{
 		CurrencyIsoFrom: rate.CurrencyIsoFrom,
 		CurrencyIsoTo:   rate.CurrencyIsoTo,
