@@ -1,6 +1,6 @@
 package handler
 
-import handler "github.com/Suinar/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
+import handler "github.com/kVinsom/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
 
 // Handlers groups the transport handlers exposed by the application.
 type Handlers struct {

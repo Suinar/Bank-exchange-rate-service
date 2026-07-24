@@ -1,6 +1,6 @@
 package external
 
-import monobank "github.com/Suinar/Bank-exhange-rate-service/internal/external/monobank"
+import monobank "github.com/kVinsom/Bank-exhange-rate-service/internal/external/monobank"
 
 // Clients groups integrations with external systems.
 type Clients struct {

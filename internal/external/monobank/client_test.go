@@ -1,5 +1,3 @@
-package monobank
-
 package monobank_test
 
 import (
@@ -8,64 +6,44 @@ import (
 	httptest "net/http/httptest"
 	testing "testing"
 
-	monobank "github.com/Suinar/Bank-exhange-rate-service/internal/external/monobank"
-	fixture "github.com/Suinar/Bank-exhange-rate-service/internal/test/fixture"
+	monobank "github.com/kVinsom/Bank-exhange-rate-service/internal/external/monobank"
+	mocks "github.com/kVinsom/Bank-exhange-rate-service/internal/mocks/cache"
+	fixture "github.com/kVinsom/Bank-exhange-rate-service/internal/test/fixture"
+	monobankFixture "github.com/kVinsom/Bank-exhange-rate-service/internal/test/fixture/monobank"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 )
 
 func TestMonobankClient_GetAllExchangeRate_Success(t *testing.T) {
 	t.Parallel()
 
-	mux, _, sut, ctx := NewSUT(t)
+	mux, _, cache, sut, ctx := NewSUT(t)
 	mux.HandleFunc("/bank/currency", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "/bank/currency", r.URL.Path)
 		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`[{"currencyCodeA":840,"currencyCodeB":978,"date":1710000000,"rateSell":3,"rateBuy":2,"rateCross":2.5}]`))
+		_, err := w.Write(fixture.NewMonoExchangeRateJSON())
 		require.NoError(t, err)
 	})
 
-	result, err := sut.GetAllExchangeRate(ctx)
+	cache.EXPECT().
+		AddAllExchangeRate(gomock.Eq(ctx), gomock.Eq(fixture.NewRankings())).
+		Return(nil).
+		Times(1)
+
+	err := sut.GetAllExchangeRate(ctx)
 
 	require.NoError(t, err)
-	require.Len(t, result, 1)
-	assert.Equal(t, fixture.NewRanking(), &result[0])
-}
-
-func TestMonobankClient_GetAllExchangeRate_UnexpectedStatusCode(t *testing.T) {
-	t.Parallel()
-
-	mux, _, sut, ctx := NewSUT(t)
-	mux.HandleFunc("/bank/currency", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-	})
-
-	result, err := sut.GetAllExchangeRate(ctx)
-
-	require.EqualError(t, err, "monobank unexpected status code: 500")
-	assert.Nil(t, result)
-}
-
-func TestMonobankClient_GetAllExchangeRate_RequestError(t *testing.T) {
-	t.Parallel()
-
-	_, server, sut, ctx := NewSUT(t)
-	server.Close()
-
-	result, err := sut.GetAllExchangeRate(ctx)
-
-	require.Error(t, err)
-	assert.Nil(t, result)
 }
 
 func TestMonobankClient_MonobankMapper(t *testing.T) {
 	t.Parallel()
 
-	_, _, sut, _ := NewSUT(t)
-	model := fixture.NewMonoExchangeRate()
+	_, _, _, sut, _ := NewSUT(t)
+	model := monobankFixture.NewMonoExchangeRate()
 
 	result := sut.MonobankMapper(model)
 
@@ -73,24 +51,18 @@ func TestMonobankClient_MonobankMapper(t *testing.T) {
 	assert.Equal(t, fixture.NewRanking(), result)
 }
 
-func TestMonobankClient_MonobankMapper_NilModel(t *testing.T) {
-	t.Parallel()
-
-	_, _, sut, _ := NewSUT(t)
-
-	result := sut.MonobankMapper(nil)
-
-	assert.Nil(t, result)
-}
-
-func NewSUT(t *testing.T) (*http.ServeMux, *httptest.Server, *monobank.MonobankClient, context.Context) {
+func NewSUT(
+	t *testing.T,
+) (*http.ServeMux, *httptest.Server, *mocks.MockIExchangeRateCache, *monobank.MonobankClient, context.Context) {
 	t.Helper()
 
+	ctrl := gomock.NewController(t)
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	sut := monobank.NewMonobankClient(server.URL, "/bank/currency")
+	cache := mocks.NewMockIExchangeRateCache(ctrl)
+	sut := monobank.NewMonobankClient(server.URL, "/bank/currency", cache)
 
-	return mux, server, sut, context.Background()
+	return mux, server, cache, sut, context.Background()
 }

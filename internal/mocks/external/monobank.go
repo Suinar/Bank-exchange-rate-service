@@ -13,7 +13,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	core "github.com/Suinar/Bank-exhange-rate-service/pkg/core"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,12 +41,11 @@ func (m *MockIMonobankClient) EXPECT() *MockIMonobankClientMockRecorder {
 }
 
 // GetAllExchangeRate mocks base method.
-func (m *MockIMonobankClient) GetAllExchangeRate(ctx context.Context) ([]core.Ranking, error) {
+func (m *MockIMonobankClient) GetAllExchangeRate(ctx context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllExchangeRate", ctx)
-	ret0, _ := ret[0].([]core.Ranking)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // GetAllExchangeRate indicates an expected call of GetAllExchangeRate.

@@ -7,10 +7,10 @@ import (
 	net "net"
 	time "time"
 
-	configs "github.com/Suinar/Bank-exhange-rate-service/internal/configs"
-	exchangeRateHandler "github.com/Suinar/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
-	services "github.com/Suinar/Bank-exhange-rate-service/internal/services"
-	exchangeRateProto "github.com/Suinar/Bank-proto/exchange_rate"
+	configs "github.com/kVinsom/Bank-exhange-rate-service/internal/configs"
+	exchangeRateHandler "github.com/kVinsom/Bank-exhange-rate-service/internal/delivery/grpc/handler/exchange_rate"
+	services "github.com/kVinsom/Bank-exhange-rate-service/internal/services"
+	exchangeRateProto "github.com/kVinsom/Bank-proto/exchange_rate"
 	grpc "google.golang.org/grpc"
 	health "google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -23,6 +23,7 @@ func RunGrpcServer(ctx context.Context, cfg *configs.Config, appServices *servic
 	if err != nil {
 		return fmt.Errorf("listen on %s: %w", address, err)
 	}
+	defer listener.Close()
 
 	server := grpc.NewServer()
 	RegisterServices(server, appServices)
@@ -47,9 +48,11 @@ func RunGrpcServer(ctx context.Context, cfg *configs.Config, appServices *servic
 		}()
 
 		// Do not let a stuck client stream block pod termination indefinitely.
+		shutdownTimer := time.NewTimer(25 * time.Second)
+		defer shutdownTimer.Stop()
 		select {
 		case <-stopped:
-		case <-time.After(25 * time.Second):
+		case <-shutdownTimer.C:
 			server.Stop()
 		}
 
