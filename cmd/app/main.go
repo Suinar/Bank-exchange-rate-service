@@ -82,9 +82,9 @@ func run() int {
 	log.InitialExchangeRatesLoading()
 	if err := monoClient.GetAllExchangeRate(ctx); err != nil {
 		log.InitialExchangeRatesLoadingFailed(err)
-		return 1
+	} else {
+		log.InitialExchangeRatesLoaded()
 	}
-	log.InitialExchangeRatesLoaded()
 	go refreshExchangeRates(ctx, monoClient, cfg.Monobank.RefreshInterval)
 
 	exchangeService := exchangeRateService.NewExchangeRateService(appCaches.ExchangeRateCache)

@@ -7,7 +7,7 @@ require (
 	github.com/kVinsom/Bank-proto v0.0.0-20260719203302-44805b43edda
 	github.com/kVinsom/Bank-repository-service v0.0.0-20260719204411-6f71f9d95eb8
 	github.com/redis/go-redis/v9 v9.20.1
-	github.com/segmentio/kafka-go v0.4.49
+	github.com/segmentio/kafka-go v0.4.51
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0

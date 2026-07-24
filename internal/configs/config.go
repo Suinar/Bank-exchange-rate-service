@@ -4,6 +4,7 @@ import (
 	errors "errors"
 	fmt "fmt"
 	os "os"
+	strings "strings"
 	time "time"
 
 	log "github.com/kVinsom/Bank-exhange-rate-service/internal/logging/config"
@@ -85,7 +86,11 @@ func Load() (*Config, error) {
 		return nil, errors.New("MONOBANK_REFRESH_INTERVAL must be greater than zero")
 	}
 
-	cfg.Kafka.Brokers = viper.GetStringSlice("KAFKA_BROKERS")
+	for _, broker := range strings.Split(viper.GetString("KAFKA_BROKERS"), ",") {
+		if broker = strings.TrimSpace(broker); broker != "" {
+			cfg.Kafka.Brokers = append(cfg.Kafka.Brokers, broker)
+		}
+	}
 	cfg.Kafka.GetRelativeRankingRequestTopic = viper.GetString("GET_RELATIVE_RANKING_REQUEST_TOPIC")
 	cfg.Kafka.GetAllRankingRequestTopic = viper.GetString("GET_ALL_RANKING_REQUEST_TOPIC")
 
