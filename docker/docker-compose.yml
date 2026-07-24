@@ -1,0 +1,89 @@
+name: bank-exchange-rate
+
+services:
+  exchange-rate-service:
+    image: ${EXCHANGE_RATE_IMAGE:-bank-exchange-rate-service:local}
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      GRPC_PORT: "50053"
+      GRPC_NETWORK: tcp
+      MONOBANK_BASE_URL: ${MONOBANK_BASE_URL:-https://api.monobank.ua}
+      MONOBANK_CURRENCY_ENDPOINT: ${MONOBANK_CURRENCY_ENDPOINT:-/bank/currency}
+      MONOBANK_REFRESH_INTERVAL: ${MONOBANK_REFRESH_INTERVAL:-5m}
+      KAFKA_BROKERS: kafka:9092
+      GET_RELATIVE_RANKING_REQUEST_TOPIC: ${GET_RELATIVE_RANKING_REQUEST_TOPIC:-exchange-rate.get-relative-ranking.request}
+      GET_ALL_RANKING_REQUEST_TOPIC: ${GET_ALL_RANKING_REQUEST_TOPIC:-exchange-rate.get-all-ranking.request}
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_POOL_SIZE: ${REDIS_POOL_SIZE:-10}
+      REDIS_MIN_IDLE_CONNS: ${REDIS_MIN_IDLE_CONNS:-2}
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${GRPC_PORT:-50053}:50053"
+    healthcheck:
+      test: ["CMD", "/app/bank-exchange-rate-service", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - bank-network
+
+  kafka:
+    image: ${KAFKA_IMAGE:-bitnamilegacy/kafka:4.0.0-debian-12-r10}
+    restart: unless-stopped
+    env_file:
+      - ./kafka/kafka.properties
+    environment:
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://${KAFKA_ADVERTISED_HOST:-localhost}:${KAFKA_PORT:-29092}
+    ports:
+      - "${KAFKA_PORT:-29092}:29092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 10
+    volumes:
+      - kafka-data:/bitnami/kafka
+    networks:
+      - bank-network
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis-data:/data
+    networks:
+      - bank-network
+
+volumes:
+  kafka-data:
+  redis-data:
+
+networks:
+  bank-network:
+    driver: bridge

@@ -3,8 +3,8 @@ package exchange_rate_test
 import (
 	testing "testing"
 
-	fixture "github.com/Suinar/Bank-exhange-rate-service/internal/test/fixture"
-	errors "github.com/Suinar/Bank-repository-service/pkg"
+	fixture "github.com/kVinsom/Bank-exhange-rate-service/internal/test/fixture"
+	errors "github.com/kVinsom/Bank-repository-service/pkg"
 	assert "github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"

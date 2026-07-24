@@ -1,224 +1,226 @@
 # Bank Exchange Rate Service
 
-Go microservice that retrieves current exchange rates from the public Monobank API and exposes them to the banking platform over gRPC.
+A Go service that retrieves Monobank exchange rates, stores them in Redis, and exposes them through gRPC.
 
-## Technologies
+## How the Service Works
 
-- Go 1.25
-- gRPC and Protocol Buffers
-- Monobank HTTP API
-- Docker and Docker Compose
-- Apache Kafka in KRaft mode (optional local infrastructure; integration is not implemented yet)
-- Viper
-- GoMock
-- Testify
+1. On startup, the service connects to Redis and Kafka.
+2. The Monobank client retrieves the current exchange-rate list.
+3. The complete snapshot is written to Redis atomically.
+4. The service layer reads exchange rates only through `IExchangeRateCache`.
+5. The data is available through gRPC methods that:
+   - retrieve a single rate by `currencyIsoFrom` and `currencyIsoTo`;
+   - retrieve all rates by `currencyIsoFrom`.
+6. The snapshot is refreshed automatically at the interval specified by `MONOBANK_REFRESH_INTERVAL`.
 
-## Features
+The complete Redis snapshot is replaced using an atomic Lua script. Concurrent updates cannot mix different exchange-rate sets, and stale Redis indexes are removed when they are read.
 
-- Fetches the current Monobank currency snapshot
-- Returns one exchange rate by currency pair
-- Returns all available rates for a source currency
-- Propagates request cancellation to the upstream HTTP call
-- Uses bounded upstream and healthcheck timeouts
-- Exposes the standard gRPC health service
-- Supports graceful container shutdown
-- Uses a non-root distroless runtime image
-- Keeps successful and error tests in separate files
+## Main Components
 
-## Project structure
+- Go 1.25.5
+- gRPC
+- Monobank currency API
+- Redis 7
+- Kafka
+- Docker Compose
+- Testcontainers for Go
+- GoMock and Testify
+
+## Project Structure
 
 ```text
-.
-├── cmd/app/                                # Application entry point and healthcheck
-├── internal/
-│   ├── configs/                            # Environment and optional .env configuration
-│   ├── delivery/grpc/                      # gRPC server
-│   │   └── handler/exchange_rate/          # Exchange-rate transport handlers and tests
-│   ├── external/monobank/                  # Monobank HTTP client and transport models
-│   ├── mocks/                              # Generated GoMock implementations
-│   ├── services/exchange_rate/             # Application logic and tests
-│   └── test/                               # Shared constants and fixtures
-├── pkg/core/                               # Domain models
-├── docker-compose.yml                      # Application and optional Kafka profiles
-├── Dockerfile                              # Multi-stage non-root image
-├── .env.example                            # Configuration template
-└── Makefile                                # Development commands
+cmd/app                                  service entry point
+internal/configs                         configuration
+internal/delivery/grpc                   gRPC server and handlers
+internal/external/monobank               Monobank client
+internal/repositories/cahce              Redis connection and initialization
+internal/repositories/cahce/exchange_rate Redis exchange-rate cache
+internal/services/exchange_rate          service for reading rates from the cache
+internal/brokers/kafka                   Kafka topic initialization
+internal/mocks                           generated GoMock mocks
+internal/test/fixture                    test fixtures
+pkg/core                                 domain structures
+docker                                   Docker Compose, Dockerfile, and Kafka configuration
 ```
 
-Test files follow the same convention as `Bank-repository-service`:
+The `cahce` directory name is retained to match the current project structure.
 
-- `*_test.go` contains successful behavior;
-- `*_error_test.go` contains validation, dependency, transport, and nil-input errors;
-- both files stay beside the implementation in the same package directory.
+## Requirements
+
+For running the service with Docker:
+
+- Docker Desktop or Docker Engine;
+- Docker Compose.
+
+For local development:
+
+- Go 1.25.5 or a compatible newer version;
+- running Redis and Kafka instances;
+- GNU Make (optional).
+
+Docker is also required for Redis integration tests. Testcontainers automatically creates and removes an isolated `redis:7-alpine` container.
 
 ## Configuration
 
-Copy the local template when environment overrides are needed:
+Create a local `.env` file from the example:
 
-```sh
+```bash
 cp .env.example .env
 ```
 
-The `.env` file is optional and ignored by Git. Environment variables take precedence.
+On Windows PowerShell:
 
-| Variable | Default | Purpose |
+```powershell
+Copy-Item .env.example .env
+```
+
+Main environment variables:
+
+| Variable | Default value | Purpose |
 |---|---:|---|
-| `GRPC_PORT` | `50053` | gRPC listen port |
-| `GRPC_NETWORK` | `tcp` | Listener network |
-| `MONOBANK_BASE_URL` | `https://api.monobank.ua` | Monobank API base URL |
-| `MONOBANK_CURRENCY_ENDPOINT` | `/bank/currency` | Currency endpoint path |
-| `EXCHANGE_RATE_IMAGE` | `bank-exchange-rate-service:local` | Compose application image |
-| `KAFKA_IMAGE` | `bitnami/kafka:latest` | Optional Kafka image |
-| `KAFKA_PORT` | `29092` | Kafka host port |
-| `KAFKA_ADVERTISED_HOST` | `localhost` | Kafka external advertised host |
-| `KAFKA_UI_IMAGE` | `provectuslabs/kafka-ui:latest` | Optional Kafka UI image |
-| `KAFKA_UI_PORT` | `8081` | Kafka UI host port |
+| `GRPC_PORT` | `50053` | gRPC server port |
+| `GRPC_NETWORK` | `tcp` | gRPC listener network |
+| `MONOBANK_BASE_URL` | `https://api.monobank.ua` | Monobank API URL |
+| `MONOBANK_CURRENCY_ENDPOINT` | `/bank/currency` | Exchange-rate endpoint |
+| `MONOBANK_REFRESH_INTERVAL` | `5m` | Background exchange-rate refresh interval |
+| `KAFKA_BROKERS` | none | List of Kafka brokers |
+| `GET_RELATIVE_RANKING_REQUEST_TOPIC` | `exchange-rate.get-relative-ranking.request` | Single-rate request topic |
+| `GET_ALL_RANKING_REQUEST_TOPIC` | `exchange-rate.get-all-ranking.request` | Exchange-rate list request topic |
+| `REDIS_ADDR` | `localhost:6380` | Redis address for local execution |
+| `REDIS_PASSWORD` | empty | Redis password |
+| `REDIS_DB` | `0` | Redis database number |
+| `REDIS_POOL_SIZE` | `10` | Maximum Redis connection pool size |
+| `REDIS_MIN_IDLE_CONNS` | `2` | Minimum number of idle connections |
 
-Kafka settings are infrastructure-only until producer or consumer logic is added.
+`MONOBANK_REFRESH_INTERVAL` must be greater than zero and supports the Go duration format, such as `30s`, `5m`, or `1h`.
 
-## Quick start
+## Running with Docker
 
-### Run locally
+Build the images and start all services:
 
-```sh
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Alternatively, use Make:
+
+```bash
+make docker-up-build
+```
+
+Check the service status:
+
+```bash
+make docker-ps
+make docker-health
+```
+
+View logs:
+
+```bash
+make docker-app-logs
+make docker-redis-logs
+make docker-kafka-logs
+```
+
+Stop the environment:
+
+```bash
+make docker-down
+```
+
+Remove the containers together with the Redis and Kafka volumes:
+
+```bash
+make docker-reset
+```
+
+## Running Locally
+
+Start Redis and Kafka first, then specify their addresses in `.env`.
+
+```bash
 go run ./cmd/app
 ```
 
-The gRPC server listens on `localhost:50053` by default.
+Alternatively:
 
-### Run in Docker
-
-```sh
-docker compose up -d --build exchange-rate-service
-docker compose ps
+```bash
+make run
 ```
 
-Kafka is optional, so a normal application start does not consume resources for an unused broker. Start it only when needed:
+During startup, the application:
 
-```sh
-docker compose --profile kafka up -d kafka
+- verifies the Redis connection;
+- retrieves the initial snapshot from Monobank;
+- creates the required Kafka topics;
+- starts the background exchange-rate refresh process;
+- starts the gRPC server.
+
+If the initial connection or snapshot retrieval fails, the application does not start the gRPC server.
+
+## Tests
+
+Run all tests:
+
+```bash
+go test -count=1 ./...
 ```
 
-Start Kafka UI together with its broker:
+Alternatively:
 
-```sh
-docker compose --profile tools up -d kafka-ui
+```bash
+make test
 ```
 
-## Make commands
+Run individual test suites:
 
-Run `make help` for the complete list.
-
-| Command | Description |
-|---|---|
-| `make run` | Run the service locally |
-| `make build` | Build the application |
-| `make test` | Run all tests |
-| `make test-race` | Run tests with the race detector |
-| `make test-cover` | Print statement coverage |
-| `make docker-up-build` | Build and start the application |
-| `make docker-kafka-up` | Start optional Kafka |
-| `make docker-tools-up` | Start optional Kafka UI and its dependency |
-| `make docker-config` | Validate and render Compose configuration |
-
-## Testing
-
-Run the complete quality check:
-
-```sh
-go vet ./...
-go test -race -count=1 ./...
-```
-
-Run individual layers:
-
-```sh
+```bash
 make test-client
 make test-service
 make test-handler
 ```
 
-Generate coverage:
+Run additional checks:
 
-```sh
-go test -coverprofile coverage.out ./...
-go tool cover -func coverage.out
+```bash
+go vet ./...
+make test-cover
+make test-race
 ```
 
-All current tests are self-contained: the Monobank client uses `httptest`, while service and handler dependencies use GoMock. No live Monobank or Kafka connection is required.
-
-## Test coverage
-
-The current service and Monobank client statement-coverage baseline is 100%. Generate and inspect the results independently:
-
-```sh
-go test -coverprofile service.coverage ./internal/services/exchange_rate
-go tool cover -func service.coverage
-
-go test -coverprofile client.coverage ./internal/external/monobank
-go tool cover -func client.coverage
-```
-
-### Exchange-rate service
-
-| Function | Coverage |
-|---|---:|
-| `NewExchangeRateService` | 100.0% |
-| `GetExchangeRate` | 100.0% |
-| `GetAllExchangeRate` | 100.0% |
-| `MapperToProto` | 100.0% |
-| **Total service coverage** | **100.0%** |
-
-### Monobank client
-
-| Function | Coverage |
-|---|---:|
-| `NewMonobankClient` | 100.0% |
-| `GetAllExchangeRate` | 100.0% |
-| `MonobankMapper` | 100.0% |
-| `mapMonobankRate` | 100.0% |
-| **Total client coverage** | **100.0%** |
-
-Generated mocks, shared fixtures, bootstrap packages, and the application entry point are excluded from these layer-level figures because their package percentages do not represent service or client behavior.
-
-## gRPC API
-
-The service implements `RankingRepository` from `github.com/Suinar/Bank-proto`:
-
-- `GetExchangeRate` returns a rate for one source/target currency pair;
-- `GetAllExchangeRate` returns all rates for a source currency.
-
-Protocol definitions are versioned through the Go module dependency.
-
-## Architecture
+The Redis integration tests are located in:
 
 ```text
-gRPC client
-    │
-    ▼
-exchange-rate handler
-    │
-    ▼
-exchange-rate service
-    │
-    ▼
-Monobank HTTP client ──► Monobank API
+internal/repositories/cahce/exchange_rate
 ```
 
-The handler validates transport input, the service filters and maps domain data, and the external client owns HTTP behavior and upstream response mapping.
+They use Testcontainers for Go, start a real Redis instance on a random port, and automatically remove the container after completion.
 
-## Docker image and health
+## Redis Data Model
 
-Build the image manually:
+Each currency pair is stored as a Redis hash. Additional Redis sets are used as indexes:
 
-```sh
-docker build -t bank-exchange-rate-service:local .
+- by the complete pair key, `currencyIsoFrom:currencyIsoTo`;
+- by the source currency, `currencyIsoFrom`;
+- to track all keys in the current snapshot.
+
+Supported operations:
+
+```go
+AddAllExchangeRate(ctx, rates)
+GetExchangeRate(ctx, currencyIsoFrom, currencyIsoTo)
+GetAllExchangeRate(ctx, currencyIsoFrom)
 ```
 
-The final image runs as a non-root user, has a read-only filesystem in Compose, and contains only the statically linked application binary. The same binary provides a bounded gRPC healthcheck:
+`AddAllExchangeRate` completely replaces the previous snapshot, including when an empty list is provided.
 
-```sh
-/app/bank-exchange-rate-service healthcheck
+## Health Check
+
+The same binary supports a health-check mode:
+
+```bash
+./bank-exchange-rate-service healthcheck
 ```
 
-The container reports `unhealthy` when the local gRPC health service is unreachable or not serving. On `SIGTERM`, readiness changes to `NOT_SERVING`, active calls receive time to finish, and the server is force-stopped if graceful termination cannot complete.
+The health check connects to the local gRPC server and verifies the standard gRPC health status.

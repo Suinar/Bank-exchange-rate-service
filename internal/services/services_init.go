@@ -1,6 +1,6 @@
 package services
 
-import exchangeRate "github.com/Suinar/Bank-exhange-rate-service/internal/services/exchange_rate"
+import exchangeRate "github.com/kVinsom/Bank-exhange-rate-service/internal/services/exchange_rate"
 
 // Services groups the application services used by transport layers.
 type Services struct {

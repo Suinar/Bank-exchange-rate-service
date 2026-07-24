@@ -1,9 +1,17 @@
+.idea/
 .env
 .env.*
 !.env.example
 
-.idea/
+# Go build and test artifacts
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Local tooling and logs
+.gocache/
 .vscode/
-bin/
-coverage.out
 *.log

@@ -1,14 +1,13 @@
 APP_PACKAGE := ./cmd/app
-COMPOSE := docker compose
+COMPOSE := docker compose -f docker/docker-compose.yml
 APP_SERVICE := exchange-rate-service
 
 .DEFAULT_GOAL := help
 
 .PHONY: help run build test test-client test-service test-handler test-core test-race test-cover clean \
 	docker-build docker-up docker-up-build docker-down docker-stop docker-start \
-	docker-restart docker-logs docker-app-logs docker-kafka-logs docker-ui-logs \
-	docker-ps docker-health docker-kafka-up docker-kafka-down docker-tools-up docker-tools-down docker-config docker-pull \
-	docker-ps docker-health docker-tools-up docker-tools-down docker-config docker-pull \
+	docker-restart docker-logs docker-app-logs docker-kafka-logs docker-redis-logs \
+	docker-ps docker-health docker-config docker-pull \
 	docker-create docker-remove docker-reset
 
 help:
@@ -34,13 +33,9 @@ help:
 	@echo "  make docker-logs        Follow logs from all containers"
 	@echo "  make docker-app-logs    Follow application container logs"
 	@echo "  make docker-kafka-logs  Follow Kafka container logs"
-	@echo "  make docker-ui-logs     Follow Kafka UI container logs"
+	@echo "  make docker-redis-logs  Follow Redis container logs"
 	@echo "  make docker-ps          Show Compose container status"
 	@echo "  make docker-health      Show application container health"
-	@echo "  make docker-kafka-up    Start the optional Kafka broker"
-	@echo "  make docker-kafka-down  Stop the optional Kafka broker"
-	@echo "  make docker-tools-up    Start optional tools, including Kafka UI"
-	@echo "  make docker-tools-down  Stop optional tools"
 	@echo "  make docker-config      Validate and render Compose configuration"
 	@echo "  make docker-pull        Pull service images"
 	@echo "  make docker-create      Create containers without starting them"
@@ -107,26 +102,14 @@ docker-app-logs:
 docker-kafka-logs:
 	$(COMPOSE) logs -f kafka
 
-docker-ui-logs:
-	$(COMPOSE) logs -f kafka-ui
+docker-redis-logs:
+	$(COMPOSE) logs -f redis
 
 docker-ps:
 	$(COMPOSE) ps
 
 docker-health:
 	$(COMPOSE) ps $(APP_SERVICE)
-
-docker-kafka-up:
-	$(COMPOSE) --profile kafka up -d kafka
-
-docker-kafka-down:
-	$(COMPOSE) --profile kafka stop kafka
-
-docker-tools-up:
-	$(COMPOSE) --profile tools up -d kafka-ui
-
-docker-tools-down:
-	$(COMPOSE) --profile tools stop kafka-ui
 
 docker-config:
 	$(COMPOSE) config
