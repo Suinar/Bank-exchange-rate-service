@@ -46,14 +46,14 @@ type Config struct {
 func Load() (*Config, error) {
 	const configFile = ".env"
 	log.Loading(configFile)
-	viper.SetDefault("GRPC_PORT", "50053")
+	viper.SetDefault("GRPC_PORT", "55053")
 	viper.SetDefault("GRPC_NETWORK", "tcp")
 	viper.SetDefault("MONOBANK_BASE_URL", "https://api.monobank.ua")
 	viper.SetDefault("MONOBANK_CURRENCY_ENDPOINT", "/bank/currency")
 	viper.SetDefault("MONOBANK_REFRESH_INTERVAL", "5m")
 	viper.SetDefault("GET_RELATIVE_RANKING_REQUEST_TOPIC", "exchange-rate.get-relative-ranking.request")
 	viper.SetDefault("GET_ALL_RANKING_REQUEST_TOPIC", "exchange-rate.get-all-ranking.request")
-	viper.SetDefault("REDIS_ADDR", "localhost:6380")
+	viper.SetDefault("REDIS_ADDR", "localhost:16380")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
 	viper.SetDefault("REDIS_POOL_SIZE", 10)

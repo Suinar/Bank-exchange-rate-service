@@ -24,6 +24,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	log.Configure()
 	log.Started()
 	defer log.Stopped()
@@ -32,7 +36,7 @@ func main() {
 	cfg, err := configs.Load()
 	if err != nil {
 		log.ConfigurationFailed(err)
-		return
+		return 1
 	}
 	log.ConfigurationLoaded(net.JoinHostPort("", cfg.GRPC.Port), cfg.Redis.Addr, cfg.Monobank.RefreshInterval)
 
@@ -41,9 +45,10 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		if err := checkHealth(cfg.GRPC.Port); err != nil {
 			log.GRPCServerFailed(fmt.Errorf("health check: %w", err))
+			return 1
 		}
 
-		return
+		return 0
 	}
 
 	// SIGTERM is sent by container orchestrators during rolling updates. Passing
@@ -57,7 +62,7 @@ func main() {
 	redisCancel()
 	if err != nil {
 		log.RedisConnectionFailed(cfg.Redis.Addr, err)
-		return
+		return 1
 	}
 	defer cacheClient.Close()
 	log.RedisConnected(cfg.Redis.Addr)
@@ -77,7 +82,7 @@ func main() {
 	log.InitialExchangeRatesLoading()
 	if err := monoClient.GetAllExchangeRate(ctx); err != nil {
 		log.InitialExchangeRatesLoadingFailed(err)
-		return
+		return 1
 	}
 	log.InitialExchangeRatesLoaded()
 	go refreshExchangeRates(ctx, monoClient, cfg.Monobank.RefreshInterval)
@@ -88,16 +93,17 @@ func main() {
 
 	if err := kafkaBroker.EnsureKafkaTopics(ctx, cfg); err != nil {
 		log.GRPCServerFailed(err)
-		return
+		return 1
 	}
 
 	log.GRPCServerStarting(net.JoinHostPort("", cfg.GRPC.Port))
 	if err := deliveryGRPC.RunGrpcServer(ctx, cfg, appServices); err != nil {
 		log.GRPCServerFailed(err)
-		return
+		return 1
 	}
 	log.ShutdownSignalReceived()
 	log.GRPCServerStopped()
+	return 0
 }
 
 func refreshExchangeRates(ctx context.Context, client *monobank.MonobankClient, interval time.Duration) {

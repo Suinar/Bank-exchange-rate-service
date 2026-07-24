@@ -49,7 +49,7 @@ spec:
           command:
             - sh
             - -c
-            - exec redis-server --appendonly yes --requirepass "$REDIS_PASSWORD"
+            - exec redis-server --port 16379 --appendonly yes --requirepass "$REDIS_PASSWORD"
           env:
             - name: REDIS_PASSWORD
               valueFrom:
@@ -58,14 +58,14 @@ spec:
                   key: REDIS_PASSWORD
           ports:
             - name: redis
-              containerPort: 6379
+              containerPort: 16379
               protocol: TCP
           readinessProbe:
             exec:
               command:
                 - sh
                 - -c
-                - redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping
+                - redis-cli --no-auth-warning -p 16379 -a "$REDIS_PASSWORD" ping
             initialDelaySeconds: 3
             periodSeconds: 5
             timeoutSeconds: 3
@@ -75,7 +75,7 @@ spec:
               command:
                 - sh
                 - -c
-                - redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping
+                - redis-cli --no-auth-warning -p 16379 -a "$REDIS_PASSWORD" ping
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
@@ -114,6 +114,6 @@ spec:
     app.kubernetes.io/name: exchange-rate-redis
   ports:
     - name: redis
-      port: 6379
+      port: 16379
       targetPort: redis
       protocol: TCP

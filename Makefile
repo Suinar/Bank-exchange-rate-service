@@ -1,6 +1,6 @@
 APP_PACKAGE := ./cmd/app
 COMPOSE := docker compose -f docker/docker-compose.yml
-APP_SERVICE := exchange-rate-service
+APP_SERVICE := exchange-rate-app
 
 .DEFAULT_GOAL := help
 
@@ -100,10 +100,10 @@ docker-app-logs:
 	$(COMPOSE) logs -f $(APP_SERVICE)
 
 docker-kafka-logs:
-	$(COMPOSE) logs -f kafka
+	$(COMPOSE) logs -f exchange-rate-kafka
 
 docker-redis-logs:
-	$(COMPOSE) logs -f redis
+	$(COMPOSE) logs -f exchange-rate-redis
 
 docker-ps:
 	$(COMPOSE) ps

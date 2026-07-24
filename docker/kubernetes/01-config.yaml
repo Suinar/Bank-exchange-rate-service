@@ -7,15 +7,15 @@ metadata:
     app.kubernetes.io/name: exchange-rate-service
     app.kubernetes.io/part-of: bank
 data:
-  GRPC_PORT: "50053"
+  GRPC_PORT: "55053"
   GRPC_NETWORK: tcp
   MONOBANK_BASE_URL: https://api.monobank.ua
   MONOBANK_CURRENCY_ENDPOINT: /bank/currency
   # Kafka is shared infrastructure owned by the main backend deployment.
-  KAFKA_BROKERS: bank-kafka:9092
+  KAFKA_BROKERS: kafka:9092
   GET_RELATIVE_RANKING_REQUEST_TOPIC: exchange-rate.get-relative-ranking.request
   GET_ALL_RANKING_REQUEST_TOPIC: exchange-rate.get-all-ranking.request
-  REDIS_ADDR: exchange-rate-redis:6379
+  REDIS_ADDR: exchange-rate-redis:16379
   REDIS_DB: "0"
   REDIS_POOL_SIZE: "10"
   REDIS_MIN_IDLE_CONNS: "2"

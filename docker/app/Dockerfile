@@ -24,7 +24,7 @@ WORKDIR /app
 
 COPY --from=builder /out/bank-exchange-rate-service /app/bank-exchange-rate-service
 
-EXPOSE 50053
+EXPOSE 55053
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
     CMD ["/app/bank-exchange-rate-service", "healthcheck"]

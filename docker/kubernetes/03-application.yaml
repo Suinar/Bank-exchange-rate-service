@@ -52,7 +52,7 @@ spec:
                   key: REDIS_PASSWORD
           ports:
             - name: grpc
-              containerPort: 50053
+              containerPort: 55053
               protocol: TCP
           startupProbe:
             exec:
@@ -114,6 +114,6 @@ spec:
     app.kubernetes.io/name: exchange-rate-service
   ports:
     - name: grpc
-      port: 50053
+      port: 55053
       targetPort: grpc
       protocol: TCP

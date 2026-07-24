@@ -78,7 +78,7 @@ Main environment variables:
 
 | Variable | Default value | Purpose |
 |---|---:|---|
-| `GRPC_PORT` | `50053` | gRPC server port |
+| `GRPC_PORT` | `55053` | gRPC server port |
 | `GRPC_NETWORK` | `tcp` | gRPC listener network |
 | `MONOBANK_BASE_URL` | `https://api.monobank.ua` | Monobank API URL |
 | `MONOBANK_CURRENCY_ENDPOINT` | `/bank/currency` | Exchange-rate endpoint |
@@ -86,7 +86,7 @@ Main environment variables:
 | `KAFKA_BROKERS` | none | List of Kafka brokers |
 | `GET_RELATIVE_RANKING_REQUEST_TOPIC` | `exchange-rate.get-relative-ranking.request` | Single-rate request topic |
 | `GET_ALL_RANKING_REQUEST_TOPIC` | `exchange-rate.get-all-ranking.request` | Exchange-rate list request topic |
-| `REDIS_ADDR` | `localhost:6380` | Redis address for local execution |
+| `REDIS_ADDR` | `localhost:16380` | Redis address for local execution |
 | `REDIS_PASSWORD` | empty | Redis password |
 | `REDIS_DB` | `0` | Redis database number |
 | `REDIS_POOL_SIZE` | `10` | Maximum Redis connection pool size |
